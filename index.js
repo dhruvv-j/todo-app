@@ -1,11 +1,14 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+require('dotenv').config();
+const cors = require('cors'); 
 const {UserModel, TodoModel} = require("./db");
 const { default: mongoose } = require("mongoose");
 
 mongoose.connect(process.env.DB_URL);
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.post("/signup", async function (req,res){
     const email = req.body.email;

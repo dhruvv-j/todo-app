@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        input {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        button {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .auth-container hr {
+            margin: 2rem 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+        #todos-container {
+            display: none; /* Hidden by default */
+        }
+        #logout-button {
+            background-color: #dc3545;
+        }
+        #logout-button:hover {
+            background-color: #c82333;
+        }
+        ul#todo-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 1.5rem;
+        }
+        li.todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+        li.todo-item.done {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .status-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .message {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="auth-container">
+            <h2>Sign Up</h2>
+            <form id="signup-form">
+                <input type="text" id="signup-name" placeholder="Name" required>
+                <input type="email" id="signup-email" placeholder="Email" required>
+                <input type="password" id="signup-password" placeholder="Password" required>
+                <button type="submit">Sign Up</button>
+            </form>
+            <hr>
+            <h2>Sign In</h2>
+            <form id="signin-form">
+                <input type="email" id="signin-email" placeholder="Email" required>
+                <input type="password" id="signin-password" placeholder="Password" required>
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+
+        <div id="todos-container">
+            <h2>Your Todos ✅</h2>
+            <form id="todo-form">
+                <input type="text" id="todo-title" placeholder="What needs to be done?" required>
+                <button type="submit">Add Todo</button>
+            </form>
+            <ul id="todo-list">
+                </ul>
+            <button id="logout-button">Logout</button>
+        </div>
+        
+        <div id="message-box"></div>
+    </div>
+
+<script>
+    const API_BASE_URL = 'http://localhost:3000';
+
+    // DOM Elements
+    const authContainer = document.getElementById('auth-container');
+    const todosContainer = document.getElementById('todos-container');
+    const signupForm = document.getElementById('signup-form');
+    const signinForm = document.getElementById('signin-form');
+    const todoForm = document.getElementById('todo-form');
+    const todoList = document.getElementById('todo-list');
+    const logoutButton = document.getElementById('logout-button');
+    const messageBox = document.getElementById('message-box');
+
+    // --- Utility Functions ---
+
+    /**
+     * Displays a message to the user.
+     * @param {string} text The message text.
+     * @param {'success' | 'error'} type The type of message.
+     */
+    function showMessage(text, type = 'success') {
+        messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
+        setTimeout(() => { messageBox.innerHTML = ''; }, 3000);
+    }
+
+    /**
+     * Toggles between the authentication view and the todos view.
+     */
+    function showTodosView() {
+        authContainer.style.display = 'none';
+        todosContainer.style.display = 'block';
+        fetchTodos();
+    }
+
+    function showAuthView() {
+        authContainer.style.display = 'block';
+        todosContainer.style.display = 'none';
+        localStorage.removeItem('token');
+        todoList.innerHTML = ''; // Clear old todos
+    }
+
+    // --- API Call Functions ---
+
+    /**
+     * Handles user sign-up.
+     */
+    async function handleSignup(event) {
+        event.preventDefault();
+        const name = document.getElementById('signup-name').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                showMessage(data.message || 'Signup successful! Please sign in.');
+                signupForm.reset();
+            } else {
+                throw new Error(data.message || 'Signup failed');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+
+    /**
+     * Handles user sign-in.
+     */
+    async function handleSignin(event) {
+        event.preventDefault();
+        const email = document.getElementById('signin-email').value;
+        const password = document.getElementById('signin-password').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/signin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok && data.token) {
+                localStorage.setItem('token', data.token);
+                showTodosView();
+            } else {
+                throw new Error(data.message || 'Incorrect credentials');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+
+    /**
+     * Fetches and renders todos for the logged-in user.
+     */
+    async function fetchTodos() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/todos`, {
+                method: 'GET',
+                headers: { 'token': token },
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                renderTodos(data.todos);
+            } else {
+                 throw new Error(data.message || 'Failed to fetch todos');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+            if (error.message.includes('Log in Again')) {
+                showAuthView(); // Token might be expired/invalid
+            }
+        }
+    }
+
+    /**
+     * Renders todo items to the list.
+     * @param {Array} todos - The array of todo objects.
+     */
+    function renderTodos(todos) {
+        todoList.innerHTML = ''; // Clear existing list
+        if (todos.length === 0) {
+            todoList.innerHTML = '<li>No todos yet. Add one above!</li>';
+            return;
+        }
+        todos.forEach(todo => {
+            const li = document.createElement('li');
+            li.className = `todo-item ${todo.done ? 'done' : ''}`;
+            li.innerHTML = `
+                <span>${todo.title}</span>
+                <span class="status-toggle">${todo.done ? '✅' : '⚪️'}</span>
+            `;
+            // Note: The backend doesn't have an update route, so clicking the status won't persist.
+            // This just visually shows the current status from the DB.
+            todoList.appendChild(li);
+        });
+    }
+
+    /**
+     * Creates a new todo item.
+     */
+    async function createTodo(event) {
+        event.preventDefault();
+        const token = localStorage.getItem('token');
+        const titleInput = document.getElementById('todo-title');
+        const title = titleInput.value;
+
+        if (!title || !token) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/todo`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': token,
+                },
+                body: JSON.stringify({ title: title, done: false }),
+            });
+            const data = await response.json();
+            if (response.ok) {
+                titleInput.value = ''; // Clear input
+                fetchTodos(); // Refresh the list
+            } else {
+                throw new Error(data.message || 'Failed to create todo');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+
+    // --- Event Listeners ---
+    signupForm.addEventListener('submit', handleSignup);
+    signinForm.addEventListener('submit', handleSignin);
+    todoForm.addEventListener('submit', createTodo);
+    logoutButton.addEventListener('click', showAuthView);
+
+
+    // --- Initial Check on Page Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            showTodosView();
+        } else {
+            showAuthView();
+        }
+    });
+
+</script>
+</body>
+</html>
