@@ -3,129 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo App</title>
+    <title>Todo App | Sleek Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* CSS Variables for a consistent and easily customizable theme */
+        :root {
+            --primary-color: #8e44ad;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --danger-hover: #c0392b;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --text-light: #ecf0f1;
+            --text-dark: #2c3e50;
+            --light-gray: #bdc3c7;
+        }
+
+        /* General Body and Layout Styling */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
         }
+
         .container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            animation: fadeIn 0.5s ease-in-out;
         }
-        h1, h2 {
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Headings */
+        h2 {
             text-align: center;
-            color: #333;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
         }
+
+        /* --- Authentication View --- */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+            border-radius: 8px;
+        }
+
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Forms Styling */
         form {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-        input {
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
+        
+        /* Hide forms by default */
+        #signup-form, #signin-form {
+            display: none;
         }
-        button {
-            padding: 0.8rem;
+        
+        #signin-form.active, #signup-form.active {
+            display: flex;
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input {
+            padding: 0.9rem;
             border: none;
-            border-radius: 6px;
-            background-color: #007bff;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-dark);
+            transition: box-shadow 0.3s;
+        }
+
+        input::placeholder {
+            color: var(--light-gray);
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--secondary-color), 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+
+        button {
+            padding: 0.9rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
+
         button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
-        .auth-container hr {
-            margin: 2rem 0;
-            border: none;
-            border-top: 1px solid #eee;
-        }
+
+        /* --- Todos View --- */
         #todos-container {
             display: none; /* Hidden by default */
         }
-        #logout-button {
-            background-color: #dc3545;
+        
+        #todo-form {
+            flex-direction: row;
         }
-        #logout-button:hover {
-            background-color: #c82333;
+        
+        #todo-form input {
+            flex-grow: 1;
         }
+        
+        #todo-form button {
+            flex-shrink: 0;
+            min-width: 100px;
+        }
+
         ul#todo-list {
             list-style: none;
             padding: 0;
             margin-top: 1.5rem;
+            max-height: 300px;
+            overflow-y: auto;
         }
+        
+        /* Custom scrollbar for todo list */
+        ul#todo-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        ul#todo-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        ul#todo-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+        }
+        ul#todo-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
         li.todo-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.8rem;
-            border-bottom: 1px solid #eee;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            color: var(--text-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
         }
+        
+        li.todo-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
         li.todo-item.done {
-            text-decoration: line-through;
-            color: #888;
+            opacity: 0.6;
+            background: rgba(255, 255, 255, 0.6);
         }
+        
+        li.todo-item.done span:first-child {
+            text-decoration: line-through;
+            color: var(--light-gray);
+        }
+
         .status-toggle {
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            transition: transform 0.2s;
         }
+        
+        .status-toggle:hover {
+            transform: scale(1.2);
+        }
+
+        #logout-button {
+            width: 100%;
+            margin-top: 1.5rem;
+            background: linear-gradient(135deg, var(--danger-color), #ff7675);
+        }
+
+        #logout-button:hover {
+            background: linear-gradient(135deg, var(--danger-hover), var(--danger-color));
+        }
+
+        /* Message Boxes */
         .message {
             text-align: center;
             padding: 10px;
-            margin-bottom: 1rem;
+            margin-top: 1rem;
             border-radius: 6px;
+            font-weight: 500;
+            animation: fadeIn 0.3s;
         }
         .message.success {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: var(--success-bg);
+            color: var(--success-text);
         }
         .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: var(--error-bg);
+            color: var(--error-text);
         }
-    </style>
+</style>
 </head>
 <body>
 
     <div class="container">
         <div id="auth-container">
-            <h2>Sign Up</h2>
-            <form id="signup-form">
-                <input type="text" id="signup-name" placeholder="Name" required>
-                <input type="email" id="signup-email" placeholder="Email" required>
-                <input type="password" id="signup-password" placeholder="Password" required>
-                <button type="submit">Sign Up</button>
-            </form>
-            <hr>
-            <h2>Sign In</h2>
-            <form id="signin-form">
+            <div class="auth-tabs">
+                <button class="tab-button active" data-form="signin-form">Sign In</button>
+                <button class="tab-button" data-form="signup-form">Sign Up</button>
+            </div>
+            <form id="signin-form" class="active">
                 <input type="email" id="signin-email" placeholder="Email" required>
                 <input type="password" id="signin-password" placeholder="Password" required>
                 <button type="submit">Sign In</button>
             </form>
+            <form id="signup-form">
+                <input type="text" id="signup-name" placeholder="Name" required>
+                <input type="email" id="signup-email" placeholder="Email" required>
+                <input type="password" id="signup-password" placeholder="Password" required>
+                <button type="submit">Create Account</button>
+            </form>
         </div>
 
         <div id="todos-container">
-            <h2>Your Todos ✅</h2>
+            <h2>Your Todos ✨</h2>
             <form id="todo-form">
                 <input type="text" id="todo-title" placeholder="What needs to be done?" required>
-                <button type="submit">Add Todo</button>
+                <button type="submit">Add</button>
             </form>
             <ul id="todo-list">
                 </ul>
@@ -138,7 +297,7 @@
 <script>
     const API_BASE_URL = 'http://localhost:3000';
 
-    // DOM Elements
+    // --- DOM Elements ---
     const authContainer = document.getElementById('auth-container');
     const todosContainer = document.getElementById('todos-container');
     const signupForm = document.getElementById('signup-form');
@@ -147,6 +306,10 @@
     const todoList = document.getElementById('todo-list');
     const logoutButton = document.getElementById('logout-button');
     const messageBox = document.getElementById('message-box');
+    
+    // New tab elements
+    const authTabs = document.querySelector('.auth-tabs');
+    const tabButtons = document.querySelectorAll('.tab-button');
 
     // --- Utility Functions ---
 
@@ -174,6 +337,26 @@
         todosContainer.style.display = 'none';
         localStorage.removeItem('token');
         todoList.innerHTML = ''; // Clear old todos
+        // Ensure sign-in tab is active by default
+        switchTab('signin-form');
+    }
+
+    // --- NEW: Tab Switching Logic ---
+    function switchTab(activeFormId) {
+        tabButtons.forEach(button => {
+            const formId = button.getAttribute('data-form');
+            const formElement = document.getElementById(formId);
+            
+            if (formId === activeFormId) {
+                button.classList.add('active');
+                formElement.classList.add('active');
+                formElement.style.display = 'flex';
+            } else {
+                button.classList.remove('active');
+                formElement.classList.remove('active');
+                formElement.style.display = 'none';
+            }
+        });
     }
 
     // --- API Call Functions ---
@@ -198,6 +381,7 @@
             if (response.ok) {
                 showMessage(data.message || 'Signup successful! Please sign in.');
                 signupForm.reset();
+                switchTab('signin-form'); // Switch to sign-in tab after successful signup
             } else {
                 throw new Error(data.message || 'Signup failed');
             }
@@ -254,7 +438,7 @@
             }
         } catch (error) {
             showMessage(error.message, 'error');
-            if (error.message.includes('Log in Again')) {
+            if (error.message.includes('Log in Again') || response.status === 401) {
                 showAuthView(); // Token might be expired/invalid
             }
         }
@@ -267,7 +451,13 @@
     function renderTodos(todos) {
         todoList.innerHTML = ''; // Clear existing list
         if (todos.length === 0) {
-            todoList.innerHTML = '<li>No todos yet. Add one above!</li>';
+            const li = document.createElement('li');
+            li.textContent = 'No todos yet. Add one above! 🎉';
+            li.style.background = 'transparent';
+            li.style.color = 'var(--text-light)';
+            li.style.textAlign = 'center';
+            li.style.boxShadow = 'none';
+            todoList.appendChild(li);
             return;
         }
         todos.forEach(todo => {
@@ -277,7 +467,7 @@
                 <span>${todo.title}</span>
                 <span class="status-toggle">${todo.done ? '✅' : '⚪️'}</span>
             `;
-            // Note: The backend doesn't have an update route, so clicking the status won't persist.
+            // Note: The original backend doesn't have an update route, so clicking the status won't persist.
             // This just visually shows the current status from the DB.
             todoList.appendChild(li);
         });
@@ -320,7 +510,13 @@
     signinForm.addEventListener('submit', handleSignin);
     todoForm.addEventListener('submit', createTodo);
     logoutButton.addEventListener('click', showAuthView);
-
+    
+    // New listener for tab clicks
+    authTabs.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-button')) {
+            switchTab(e.target.getAttribute('data-form'));
+        }
+    });
 
     // --- Initial Check on Page Load ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -331,7 +527,6 @@
             showAuthView();
         }
     });
-
 </script>
 </body>
 </html>
